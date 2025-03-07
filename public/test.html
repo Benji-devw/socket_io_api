@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Chat</title>
+    <script src="https://cdn.socket.io/4.7.4/socket.io.min.js"></script>
+    <style>
+        #messages { height: 300px; overflow-y: auto; border: 1px solid #ccc; margin-bottom: 10px; padding: 10px; }
+        .message { margin: 5px 0; }
+    </style>
+</head>
+<body>
+    <div id="messages"></div>
+    <input type="text" id="username" placeholder="Ton nom" value="Test">
+    <input type="text" id="room" placeholder="Room" value="general">
+    <input type="text" id="message" placeholder="Message">
+    <button onclick="sendMessage()">Envoyer</button>
+
+    <script>
+        const socket = io('http://localhost:3000');
+        const messagesDiv = document.getElementById('messages');
+        
+        socket.on('connect', () => {
+            console.log('Connecté au serveur');
+            socket.emit('join', 'general');
+        });
+
+        socket.on('message', (msg) => {
+            const div = document.createElement('div');
+            div.className = 'message';
+            div.textContent = `${msg.user}: ${msg.content}`;
+            messagesDiv.appendChild(div);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        });
+
+        function sendMessage() {
+            const message = document.getElementById('message').value;
+            const user = document.getElementById('username').value;
+            const room = document.getElementById('room').value;
+            
+            if (message && user) {
+                socket.emit('message', { user, content: message, room });
+                document.getElementById('message').value = '';
+            }
+        }
+
+        // Permettre l'envoi avec Enter
+        document.getElementById('message').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendMessage();
+        });
+    </script>
+</body>
+</html> 
