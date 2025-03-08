@@ -1,8 +1,20 @@
 const express = require('express');
 const router = express.Router();
-const { register, login } = require('../controllers/authController');
+const upload = require('../config/multer');
+const auth = require('../middleware/auth');
+const { 
+  register, 
+  login, 
+  getProfile, 
+  updateProfile 
+} = require('../controllers/authController');
 
-router.post('/register', register);
+// Routes publiques
+router.post('/register', upload.single('avatar'), register);
 router.post('/login', login);
+
+// Routes protégées
+router.get('/profile', auth, getProfile);
+router.put('/profile', auth, upload.single('avatar'), updateProfile);
 
 module.exports = router; 

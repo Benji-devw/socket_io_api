@@ -35,6 +35,25 @@ const handleConnection = async (io, socket) => {
   // Gestion des messages privés
   socket.on('private_message', data => handlePrivateMessage(io, socket, data));
   
+  // Gestion du typing indicator
+  socket.on('typing_start', (data) => {
+    const recipientSocketId = connectedUsers.get(data.to);
+    if (recipientSocketId) {
+      io.to(recipientSocketId).emit('typing_start', {
+        username: socket.user.username
+      });
+    }
+  });
+
+  socket.on('typing_stop', (data) => {
+    const recipientSocketId = connectedUsers.get(data.to);
+    if (recipientSocketId) {
+      io.to(recipientSocketId).emit('typing_stop', {
+        username: socket.user.username
+      });
+    }
+  });
+  
   // Déconnexion
   socket.on('disconnect', () => {
     console.log(`User disconnected: ${user.username}`);
