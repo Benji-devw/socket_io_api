@@ -17,10 +17,11 @@ const handleConnection = async (io, socket) => {
   
   // Récupérer tous les utilisateurs de la base de données
   try {
-    const allUsers = await User.find({}, 'username');
+    const allUsers = await User.find({}, 'username avatarUrl');
     const usersList = allUsers.map(user => ({
       username: user.username,
-      isOnline: connectedUsers.has(user.username)
+      isOnline: connectedUsers.has(user.username),
+      avatarUrl: user.avatarUrl
     }));
     
     // Envoyer la liste complète à tout le monde
@@ -38,6 +39,43 @@ const handleConnection = async (io, socket) => {
   // Gestion des messages privés
   socket.on('private_message', data => handlePrivateMessage(io, socket, data));
   
+  // Charger plus de messages
+  socket.on('load_more_messages', async (data) => {
+    try {
+      const { before, limit = 10 } = data;
+      
+      // Construire la requête de base
+      const query = {
+        $or: [
+          { username: socket.user.username, to: data.with },
+          { username: data.with, to: socket.user.username }
+        ]
+      };
+      
+      // Si un ID "before" est fourni, ne récupérer que les messages plus anciens
+      if (before) {
+        const beforeMessage = await Message.findById(before);
+        if (beforeMessage) {
+          query.createdAt = { $lt: beforeMessage.createdAt };
+        }
+      }
+      
+      // Récupérer les messages
+      const messages = await Message.find(query)
+        .sort({ createdAt: -1 })
+        .limit(limit)
+        .exec();
+      
+      // Envoyer les messages au client
+      socket.emit('more_messages', {
+        messages: messages.reverse(),
+        hasMore: messages.length === limit
+      });
+    } catch (error) {
+      console.error('Error loading more messages:', error);
+    }
+  });
+
   // Gestion du typing indicator
   socket.on('typing_start', (data) => {
     const recipientSocketId = connectedUsers.get(data.to);
@@ -104,10 +142,11 @@ const sendMessageHistory = async (socket) => {
         { to: socket.user.username }
       ]
     })
-    .sort({ createdAt: 1 })
-    .limit(100);
+    .sort({ createdAt: -1 })
+    .limit(10)  // Limiter à 10 messages
+    .exec();
     
-    socket.emit('message_history', messages);
+    socket.emit('message_history', messages.reverse());
   } catch (err) {
     console.error('Error fetching messages:', err);
   }
