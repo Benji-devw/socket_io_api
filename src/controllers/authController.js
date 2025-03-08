@@ -139,11 +139,11 @@ const updateProfile = async (req, res) => {
           fs.unlinkSync(fullPath);
         }
       }
-      
+
       // Stocker le chemin relatif dans la base de données
-      user.avatarUrl = `/avatars/${req.file.filename}`;
+      user.avatarUrl = `${API_URL}/avatars/${req.file.filename}`;
     }
-    
+
     await user.save();
     
     // Générer un nouveau token pour refléter les changements
