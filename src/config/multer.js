@@ -17,7 +17,10 @@ const storage = multer.diskStorage({
     // Générer un nom de fichier unique avec l'extension d'origine
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
     const ext = path.extname(file.originalname);
-    cb(null, `avatar-${uniqueSuffix}${ext}`);
+    const filename = `avatar-${uniqueSuffix}${ext}`;
+    // Ajouter l'URL complète
+    req.fileUrl = `${process.env.SERVER_URL}/avatars/${filename}`;
+    cb(null, filename);
   }
 });
 

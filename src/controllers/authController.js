@@ -28,7 +28,7 @@ const register = async (req, res) => {
     }
     
     // Créer un nouvel utilisateur avec l'avatar s'il existe
-    const avatarUrl = req.file ? `/avatars/${req.file.filename}` : undefined;
+    const avatarUrl = req.fileUrl || undefined;
     const user = new User({ username, password, avatarUrl });
     await user.save();
     

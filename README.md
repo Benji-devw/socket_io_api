@@ -47,6 +47,23 @@ Database Name: socket-chat
 npm run server
 ```
 
+## User data
+```bash
+{
+    "username": "Lisa",
+    "password": "test123"
+}
+{
+    "username": "Thomas",
+    "password": "z"
+}
+{
+    "username": "ben",
+    "password": "z"
+}
+```
+
+
 ## Structure du projet
 
 ```
