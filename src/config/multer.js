@@ -19,17 +19,18 @@ const storage = multer.diskStorage({
     const ext = path.extname(file.originalname);
     const filename = `avatar-${uniqueSuffix}${ext}`;
     // Ajouter l'URL complète
-    req.fileUrl = `${process.env.SERVER_URL}/avatars/${filename}`;
+    req.fileUrl = `${process.env.API_URL}/avatars/${filename}`;
     cb(null, filename);
   }
 });
 
-// Filtre pour n'accepter que les images
+// Filtre pour n'accepter que les images PNG, JPG et GIF
 const fileFilter = (req, file, cb) => {
-  if (file.mimetype.startsWith('image/')) {
+  const allowedTypes = ['image/png', 'image/jpeg', 'image/gif'];
+  if (allowedTypes.includes(file.mimetype)) {
     cb(null, true);
   } else {
-    cb(new Error('Le fichier doit être une image'), false);
+    cb(new Error('Le fichier doit être une image PNG, JPG ou GIF'), false);
   }
 };
 

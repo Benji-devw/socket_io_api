@@ -3,6 +3,9 @@ const User = require('../models/User');
 const fs = require('fs');
 const path = require('path');
 
+// URL de base de l'API
+const API_URL = process.env.API_URL || 'http://localhost:3000';
+
 // Fonction pour générer un token JWT
 const generateToken = (userId) => {
   return jwt.sign(
@@ -28,7 +31,13 @@ const register = async (req, res) => {
     }
     
     // Créer un nouvel utilisateur avec l'avatar s'il existe
-    const avatarUrl = req.fileUrl || undefined;
+    let avatarUrl;
+    if (req.file) {
+      avatarUrl = `/avatars/${req.file.filename}`;
+    } else if (req.fileUrl) {
+      avatarUrl = req.fileUrl; // Déjà un chemin relatif
+    }
+    
     const user = new User({ username, password, avatarUrl });
     await user.save();
     
@@ -78,6 +87,10 @@ const getProfile = async (req, res) => {
     if (!user) {
       return res.status(404).json({ error: 'Utilisateur non trouvé' });
     }
+    
+    // Nous renvoyons l'avatar tel qu'il est stocké (chemin relatif)
+    // Le client est responsable de préfixer avec l'URL de base si nécessaire
+    
     res.json(user);
   } catch (error) {
     res.status(400).json({ error: error.message });
@@ -113,22 +126,35 @@ const updateProfile = async (req, res) => {
     
     // Si un nouvel avatar est fourni
     if (req.file) {
+      console.log('req.file', req.file);
       // Supprimer l'ancien avatar s'il existe et n'est pas l'avatar par défaut
-      if (user.avatarUrl && !user.avatarUrl.includes('default-avatar') && fs.existsSync(path.join(__dirname, '../../public', user.avatarUrl))) {
-        fs.unlinkSync(path.join(__dirname, '../../public', user.avatarUrl));
+      if (user.avatarUrl && !user.avatarUrl.includes('default-avatar')) {
+        // Extraire le chemin relatif, qu'il soit absolu ou relatif
+        const avatarPath = user.avatarUrl.startsWith('http') 
+          ? user.avatarUrl.replace(new RegExp(`^${API_URL}`), '')
+          : user.avatarUrl;
+        
+        const fullPath = path.join(__dirname, '../../public', avatarPath);
+        if (fs.existsSync(fullPath)) {
+          fs.unlinkSync(fullPath);
+        }
       }
       
-      // Mettre à jour l'URL de l'avatar
+      // Stocker le chemin relatif dans la base de données
       user.avatarUrl = `/avatars/${req.file.filename}`;
     }
     
     await user.save();
     
+    // Générer un nouveau token pour refléter les changements
+    const token = generateToken(user._id);
+    
     res.json({ 
       message: 'Profil mis à jour avec succès',
+      token,
       user: {
         username: user.username,
-        avatarUrl: user.avatarUrl
+        avatarUrl: user.avatarUrl // Renvoie le chemin relatif tel que stocké
       }
     });
   } catch (error) {
