@@ -1,9 +1,10 @@
 const Message = require('../models/Message');
+const User = require('../models/User');
 
 // Garder une trace des utilisateurs connectés
 const connectedUsers = new Map();
 
-const handleConnection = (io, socket) => {
+const handleConnection = async (io, socket) => {
   const user = {
     username: socket.user.username,
     isOnline: true
@@ -14,15 +15,19 @@ const handleConnection = (io, socket) => {
   
   console.log(`User connected: ${user.username}`);
   
-  // Notifier tout le monde du nouvel utilisateur
-  io.emit('user_connected', user);
-  
-  // Envoyer la liste complète des utilisateurs au nouveau connecté
-  const usersList = Array.from(connectedUsers.keys()).map(username => ({
-    username,
-    isOnline: true
-  }));
-  io.emit('users', usersList);
+  // Récupérer tous les utilisateurs de la base de données
+  try {
+    const allUsers = await User.find({}, 'username');
+    const usersList = allUsers.map(user => ({
+      username: user.username,
+      isOnline: connectedUsers.has(user.username)
+    }));
+    
+    // Envoyer la liste complète à tout le monde
+    io.emit('users', usersList);
+  } catch (error) {
+    console.error('Error fetching users:', error);
+  }
   
   // Envoyer l'historique des messages privés
   sendMessageHistory(socket);
@@ -46,7 +51,7 @@ const sendMessageHistory = async (socket) => {
         { to: socket.user.username }
       ]
     })
-    .sort({ createdAt: 1 })  // Ordre chronologique
+    .sort({ createdAt: 1 })
     .limit(100);
     
     socket.emit('message_history', messages);
