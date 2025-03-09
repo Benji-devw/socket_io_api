@@ -47,24 +47,28 @@ Database Name: socket-chat
 npm run server
 ```
 
-## User data
+## Exemple User data
 ```bash
 {
     "username": "Lisa",
     "password": "test123"
+    "avatarUrl": "avatar-1741464682861-542601302.jpg"
 }
 {
     "username": "Thomas",
     "password": "z"
+    "avatarUrl": "Thomas.png"
+
 }
 {
     "username": "ben",
     "password": "z"
+    "avatarUrl": "avatar-1741465756899-154511153.gif"
 }
 ```
 
 
-## Structure du projet
+## Structure du projet v1.0.0
 
 ```
 socket-api/
