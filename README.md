@@ -26,6 +26,11 @@ Une API de chat en temps réel construite avec Node.js, Express, Socket.io et Mo
 git clone <url-du-repo>
 cd socket-api
 ```
+1.bis Cloner le client
+```bash
+git clone https://github.com/Benji-devw/socket_io_client.git
+cd socket_io_client
+```
 
 2. Installer les dépendances
 ```bash
