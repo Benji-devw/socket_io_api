@@ -2,6 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const { createServer } = require('http');
 const cors = require('cors');
+const path = require('path');
 
 // Import des configurations
 const connectDB = require('./src/config/database');
@@ -22,7 +23,9 @@ const io = configureSocket(httpServer);
 // Middleware
 app.use(cors());
 app.use(express.json());
-app.use(express.static('public'));
+
+// Servir les fichiers statiques depuis le dossier public
+app.use(express.static(path.join(__dirname, 'public')));
 
 // Connexion à la base de données
 connectDB();
@@ -35,7 +38,7 @@ app.use('/messages', messageRoutes);
 io.on('connection', socket => handleConnection(io, socket));
 
 // Démarrage du serveur
-const PORT = process.env.PORT || 3000;
-httpServer.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+const API_PORT = process.env.API_PORT || 3000;
+httpServer.listen(API_PORT, () => {
+  console.log(`Server running on port ${API_PORT}`);
 });
